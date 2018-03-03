@@ -2,5 +2,10 @@
   "App": {
     "Name": "",
     "Port": ""
+  },
+  "Db": {
+    "Username": "",
+    "Password": "",
+    "Tablename": ""
   }
 }

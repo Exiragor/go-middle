@@ -7,12 +7,19 @@ import (
 )
 
 type Configuration struct {
-	App    App
+	App		App
+	Db		Database
 }
 
 type App struct {
-	Name string
-	Port string
+	Name	string
+	Port	string
+}
+
+type Database struct {
+	Username	string
+	Password	string
+	Tablename	string
 }
 
 var Conf Configuration
