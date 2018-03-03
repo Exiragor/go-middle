@@ -3,7 +3,7 @@ package routes
 import (
 	"github.com/gorilla/mux"
 	"net/http"
-	"github.com/Exiragor/go-middle/models"
+	"github.com/Exiragor/middle/models"
 )
 
 func apiRoutes(r *mux.Router) {

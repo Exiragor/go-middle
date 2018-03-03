@@ -12,4 +12,9 @@
 
 # Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
 .glide/
+
+#Project local ignores
 .idea/
+conf.json
+main
+Build_app

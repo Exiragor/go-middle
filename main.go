@@ -3,14 +3,15 @@ package main
 import (
 	"log"
 	"net/http"
-	"github.com/Exiragor/go-middle/routes"
-	"github.com/Exiragor/go-middle/models"
+	"github.com/Exiragor/middle/routes"
 )
 
 func main() {
-	models.SetMasters()
+	//init config and routes
+	ConfigInit()
 	router := routes.RoutesInit()
 
 	// Bind to a port and pass our router in
-	log.Fatal(http.ListenAndServe(":5000", router))
+	log.Fatal(http.ListenAndServe(":" + Conf.App.Port, router))
 }
+

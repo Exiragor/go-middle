@@ -16,11 +16,9 @@ type Master struct {
 }
 
 
-var masters []Master
-
-func SetMasters() {
-	masters = append(masters, Master{ID: 1, Firstname: "Alex", Lastname: "Lebedev", Email: "test@mail.ru"})
-	masters = append(masters, Master{ID: 2, Firstname: "Denis", Lastname: "HedgeHog", Email: "ez@mail.ru"})
+var masters = []Master{
+	Master{ID: 1, Firstname: "Alex", Lastname: "Lebedev", Email: "test@mail.ru"},
+	Master{ID: 2, Firstname: "Denis", Lastname: "HedgeHog", Email: "ez@mail.ru"},
 }
 
 // Display all from the people var
