@@ -6,6 +6,7 @@
   "Db": {
     "Username": "",
     "Password": "",
-    "Tablename": ""
-  }
+    "Name": ""
+  },
+  "BitrixHook": ""
 }

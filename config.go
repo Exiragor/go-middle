@@ -7,8 +7,9 @@ import (
 )
 
 type Configuration struct {
-	App		App
-	Db		Database
+	App			App
+	Db			Database
+	BitrixHook 	string
 }
 
 type App struct {
@@ -19,7 +20,7 @@ type App struct {
 type Database struct {
 	Username	string
 	Password	string
-	Tablename	string
+	Name		string
 }
 
 var Conf Configuration

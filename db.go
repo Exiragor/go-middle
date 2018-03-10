@@ -1,10 +1,9 @@
-package database
+package main
 
 import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"fmt"
-	"github.com/Exiragor/middle/models"
 )
 
 var Tool *gorm.DB
@@ -23,5 +22,5 @@ func DatabaseInit(login string, pass string, table string) {
 }
 
 func autoMigrate() {
-	Tool.AutoMigrate(&models.Master{})
+	Tool.AutoMigrate(&Master{})
 }
