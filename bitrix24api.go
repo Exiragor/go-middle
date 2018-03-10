@@ -7,10 +7,11 @@ import (
 	"fmt"
 )
 
-func BitrixSearchUser(email string) {
-	url := Conf.BitrixHook + "user.search.json/"
+//response for BitrixSearchUser
 
-	fmt.Println(email)
+// Search user in bitrix24
+func BitrixSearchUser(email string) []byte {
+	url := Conf.BitrixHook + "user.search.json"
 
 	jsonReq := []byte(`{"EMAIL": "` + email + `"}`)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonReq))
@@ -25,4 +26,6 @@ func BitrixSearchUser(email string) {
 
 	body, _ := ioutil.ReadAll(resp.Body)
 	fmt.Println("response Body:", string(body))
+
+	return body
 }

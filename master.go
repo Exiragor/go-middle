@@ -39,6 +39,8 @@ type Master struct {
 // Registration user
 func RegistrationUser(w http.ResponseWriter, r *http.Request) {
 	master := Master{1, 1, "Вася", "Иванов", "l_sf@mail.ru", "+7", "pass123"}
-	BitrixSearchUser(master.Email)
+	resp := BitrixSearchUser(master.Email)
+
+
 }
 
