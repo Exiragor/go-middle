@@ -6,7 +6,7 @@ import (
 	"fmt"
 )
 
-var Tool *gorm.DB
+var Db *gorm.DB
 
 func DatabaseInit(login string, pass string, table string) {
 	str := login + ":" + pass + "@/" + table
@@ -16,11 +16,11 @@ func DatabaseInit(login string, pass string, table string) {
 		fmt.Println("Database error: connection refused")
 	}
 
-	Tool = dbconn
+	Db = dbconn
 
 	autoMigrate()
 }
 
 func autoMigrate() {
-	Tool.AutoMigrate(&Master{})
+	Db.AutoMigrate(&Master{})
 }

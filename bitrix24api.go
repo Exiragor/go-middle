@@ -4,16 +4,30 @@ import (
 	"net/http"
 	"bytes"
 	"io/ioutil"
-	"fmt"
+	"encoding/json"
 )
 
+// Bitrix User
+type Bitrixuser struct {
+	ID 				int 	`json:"ID"`
+	Active 			string 	`json:"ACTIVE"`
+	Email 			string 	`json:"EMAIL"`
+	Name 			string 	`json:"NAME"`
+	LastName 		string 	`json:"LAST_NAME"`
+	PersonalMobile 	string 	`json:"PERSONAL_MOBILE"`
+}
+
 //response for BitrixSearchUser
+type BitrixSearchUserResponse struct {
+	Result 		[]Bitrixuser 	`json:"result"`
+	Total 		int 			`json:"total"`
+}
 
 // Search user in bitrix24
-func BitrixSearchUser(email string) []byte {
+func BitrixSearchUser(phone string) BitrixSearchUserResponse {
 	url := Conf.BitrixHook + "user.search.json"
 
-	jsonReq := []byte(`{"EMAIL": "` + email + `"}`)
+	jsonReq := []byte(`{"PERSONAL_MOBILE": "` + phone + `"}`)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonReq))
 	req.Header.Set("Content-Type", "application/json")
 
@@ -25,7 +39,9 @@ func BitrixSearchUser(email string) []byte {
 	defer resp.Body.Close()
 
 	body, _ := ioutil.ReadAll(resp.Body)
-	fmt.Println("response Body:", string(body))
+	response := BitrixSearchUserResponse{}
 
-	return body
+	json.Unmarshal(body, &response)
+
+	return response
 }

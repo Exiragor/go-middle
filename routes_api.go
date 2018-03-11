@@ -7,9 +7,7 @@ import (
 
 func apiRoutes(r *mux.Router) {
 	r.HandleFunc("/", YourHandler)
-	//r.HandleFunc("/people", models.GetMasters).Methods("GET")
-	//r.HandleFunc("/people/{id}", models.GetMaster).Methods("GET")
-	r.HandleFunc("/search", RegistrationUser)
+	r.HandleFunc("/auth/registration", RegistrationMaster).Methods("POST")
 }
 
 func YourHandler(w http.ResponseWriter, r *http.Request) {
