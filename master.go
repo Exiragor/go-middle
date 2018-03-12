@@ -6,17 +6,22 @@ import (
 	//"strconv"
 	"encoding/json"
 	"github.com/gorilla/schema"
+	"reflect"
+	"strconv"
 )
+
+//constants
+
 
 // The master Type
 type Master struct {
-	ID        int      `json:"id"`
+	ID        int      `json:"id" gorm:"PRIMARY_KEY"`
 	BitrixID  int      `json:"-"`
-	Firstname string   `json:"firstname"`
-	Lastname  string   `json:"lastname"`
-	Email 	  string   `json:"email"`
-	Phone	  string   `json:"phone"`
-	Password  string   `json:"-"`
+	Firstname string   `json:"firstname" schema:"firstname"`
+	Lastname  string   `json:"lastname" schema:"lastname"`
+	Email 	  string   `json:"email" schema:"email"`
+	Phone	  string   `json:"phone" gorm:"unique; not nul" schema:"phone"`
+	Password  string   `json:"-" schema:"password"`
 }
 
 // Display all masters
@@ -38,47 +43,80 @@ type Master struct {
 //	json.NewEncoder(w).Encode(&Master{})
 //}
 
-// User's registration request
-type MasterRegistrationRequest struct {
-	Firstname string   `json:"firstname" schema:"firstname"`
-	Lastname  string   `json:"lastname" schema:"lastname"`
-	Email 	  string   `json:"email" schema:"email"`
-	Phone	  string   `json:"phone" schema:"phone"`
-	Password  string   `json:"password" schema:"password"`
-}
 // Registration response
 type RegistrationResponse struct {
 	Status 	bool 	`json:"status"`
 	Message string 	`json:"message"`
 }
 
-// Registration user
+// Registration master
 func RegistrationMaster(w http.ResponseWriter, r *http.Request) {
-	var masterReq MasterRegistrationRequest
+	var master Master
 	if r.Header.Get("Content-type") == "application/json" {
-		json.NewDecoder(r.Body).Decode(&masterReq)
+		json.NewDecoder(r.Body).Decode(&master)
 	} else {
 		r.ParseForm()
 		schemaDec := schema.NewDecoder()
-		schemaDec.Decode(&masterReq, r.PostForm)
+		schemaDec.Decode(&master, r.PostForm)
 	}
 
-	if (masterReq.Phone == "") {
+	// required fields for registration
+	requiredFields := []string{"Phone", "Password"}
+
+	v := reflect.ValueOf(master)
+	strIncompleteElems := ""
+	for _, elem := range requiredFields {
+		value := v.FieldByName(elem).Interface()
+		if value == "" {
+			strIncompleteElems += elem + " is incorrect; "
+		}
+	}
+
+	if strIncompleteElems != "" {
 		res := RegistrationResponse{
 			false,
-			"Phone is incorrect",
+			"Not all required fields is complete: " + strIncompleteElems,
 		}
 
 		json.NewEncoder(w).Encode(res)
+		return
 	}
 
-	resp := BitrixSearchUser(masterReq.Phone)
+	// search master with phone on our db
+	var smaster Master
+	Db.Where("phone = ?", master.Phone).First(&smaster)
 
+	if smaster.Phone != "" {
+
+		resp := RegistrationResponse{
+			false,
+			"This phone is already taken",
+		}
+
+		json.NewEncoder(w).Encode(resp)
+		return
+	}
+
+	// try to find master in users of bitrix24 on field - phone
+	resp := BitrixSearchUser(master.Phone)
 	if resp.Total > 0 {
-		w.Write([]byte(`{"status": "true"}`))
+		id, _ := strconv.Atoi(resp.Result[0].ID)
+		master.BitrixID = id
 	} else {
-		w.Write([]byte(`{"status": "false"}`))
+		BitrixAddUser(&master)
 	}
+
+	master.Password, _ = HashPassword(master.Password)
+
+	Db.Create(&master)
+
+	response := RegistrationResponse{
+		true,
+		"New master is created",
+	}
+
+	json.NewEncoder(w).Encode(response)
+	return
 }
 
 
