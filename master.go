@@ -6,20 +6,23 @@ import (
 	"github.com/gorilla/schema"
 	"strconv"
 	"fmt"
+	"time"
 )
 
 //constants
 
 // The Master Type
 type Master struct {
-	ID        int      `json:"id" gorm:"PRIMARY_KEY"`
-	Active    bool     `json:"-"`
-	BitrixID  int      `json:"-"`
-	Firstname string   `json:"firstname" schema:"firstname"`
-	Lastname  string   `json:"lastname" schema:"lastname"`
-	Email 	  string   `json:"email" gorm:"unique; not nul" schema:"email"`
-	Phone	  string   `json:"phone" gorm:"unique; not nul" schema:"phone"`
-	Password  string   `json:"-" gorm:"not null" schema:"password"`
+	ID		  	int 			`json:"id"`
+	CreatedAt 	*time.Time 		`json:"created_at"`
+	UpdatedAt 	*time.Time 		`json:"updated_at"`
+	Active    	bool     		`json:"-"`
+	BitrixID  	int      		`json:"-"`
+	Firstname 	string   		`json:"firstname" schema:"firstname"`
+	Lastname  	string   		`json:"lastname" schema:"lastname"`
+	Email 	  	string   		`json:"email" gorm:"unique; not nul" schema:"email"`
+	Phone	  	string   		`json:"phone" gorm:"unique; not nul" schema:"phone"`
+	Password  	string   		`json:"-" gorm:"not null" schema:"password"`
 }
 
 // Registration response
@@ -35,7 +38,6 @@ func RegistrationMaster(w http.ResponseWriter, r *http.Request) {
 	var master Master
 	master = parseFields(Master{}, r)
 
-	fmt.Println(master)
 	// validate
 	strIncompleteElems := MasterRegistrationValidate(master)
 
@@ -129,8 +131,8 @@ func AuthMaster(w http.ResponseWriter, r *http.Request) {
 
 	// Try to auth Master
 	var smaster Master
-	Db.Where("phone = ?", master.Phone).First(smaster)
-
+	Db.Where("phone = ?", master.Phone).First(&smaster)
+	fmt.Println(smaster)
 	if smaster.Password == "" {
 		res := StatusResponse{
 			Status: false,
@@ -151,7 +153,8 @@ func AuthMaster(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-
+	json.NewEncoder(w).Encode(smaster)
+	return
 }
 
 // parse fields from request for master

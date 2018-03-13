@@ -9,7 +9,7 @@ import (
 var Db *gorm.DB
 
 func DatabaseInit(login string, pass string, table string) {
-	str := login + ":" + pass + "@/" + table
+	str := login + ":" + pass + "@/" + table + "?parseTime=true"
 	dbconn, err := gorm.Open("mysql", str)
 
 	if err != nil {
