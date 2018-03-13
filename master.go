@@ -1,9 +1,7 @@
 package main
 
 import (
-	//"encoding/json"
 	"net/http"
-	//"strconv"
 	"encoding/json"
 	"github.com/gorilla/schema"
 	"reflect"
@@ -16,6 +14,7 @@ import (
 // The master Type
 type Master struct {
 	ID        int      `json:"id" gorm:"PRIMARY_KEY"`
+	Active    bool     `json:"-"`
 	BitrixID  int      `json:"-"`
 	Firstname string   `json:"firstname" schema:"firstname"`
 	Lastname  string   `json:"lastname" schema:"lastname"`
@@ -24,29 +23,11 @@ type Master struct {
 	Password  string   `json:"-" schema:"password"`
 }
 
-// Display all masters
-//func GetMasters(w http.ResponseWriter, r *http.Request) {
-//	json.NewEncoder(w).Encode(masters)
-//}
-//
-//// Display a single master
-//func GetMaster(w http.ResponseWriter, r *http.Request) {
-//	params := mux.Vars(r)
-//	for _, item := range masters {
-//		id, _ := strconv.Atoi(params["id"])
-//
-//		if item.ID == id {
-//			json.NewEncoder(w).Encode(item)
-//			return
-//		}
-//	}
-//	json.NewEncoder(w).Encode(&Master{})
-//}
-
 // Registration response
-type RegistrationResponse struct {
-	Status 	bool 	`json:"status"`
-	Message string 	`json:"message"`
+type StatusResponse struct {
+	Status 			bool 	`json:"status"`
+	BitrixInvite 	bool	`json:"bitrix_invite,omitempty"`
+	Message 		string 	`json:"message"`
 }
 
 // Registration master
@@ -73,9 +54,9 @@ func RegistrationMaster(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if strIncompleteElems != "" {
-		res := RegistrationResponse{
-			false,
-			"Not all required fields is complete: " + strIncompleteElems,
+		res := StatusResponse{
+			Status: false,
+			Message: "Not all required fields is complete: " + strIncompleteElems,
 		}
 
 		json.NewEncoder(w).Encode(res)
@@ -88,9 +69,9 @@ func RegistrationMaster(w http.ResponseWriter, r *http.Request) {
 
 	if smaster.Phone != "" {
 
-		resp := RegistrationResponse{
-			false,
-			"This phone is already taken",
+		resp := StatusResponse{
+			Status: false,
+			Message: "This phone is already taken",
 		}
 
 		json.NewEncoder(w).Encode(resp)
@@ -99,20 +80,26 @@ func RegistrationMaster(w http.ResponseWriter, r *http.Request) {
 
 	// try to find master in users of bitrix24 on field - phone
 	resp := BitrixSearchUser(master.Phone)
+	bitrixInvite := false
+
 	if resp.Total > 0 {
 		id, _ := strconv.Atoi(resp.Result[0].ID)
 		master.BitrixID = id
+		master.Active = true
 	} else {
 		BitrixAddUser(&master)
+		bitrixInvite = true
+		master.Active = false
 	}
 
 	master.Password, _ = HashPassword(master.Password)
 
 	Db.Create(&master)
 
-	response := RegistrationResponse{
+	response := StatusResponse{
 		true,
-		"New master is created",
+		bitrixInvite,
+		"New master was created",
 	}
 
 	json.NewEncoder(w).Encode(response)
