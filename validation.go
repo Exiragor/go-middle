@@ -10,6 +10,14 @@ func MasterRegistrationValidate(master Master) string {
 	return errFields
 }
 
+func MasterAuthValidate(master Master) string {
+	// required fields in request
+	fields := []string{"Phone", "Password"}
+	errFields := validateFields(master, fields)
+
+	return errFields
+}
+
 func validateFields(obj interface{}, requiredFields []string) string {
 	v := reflect.ValueOf(obj)
 	strIncompleteElems := ""

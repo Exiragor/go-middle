@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"encoding/json"
 	"github.com/gorilla/schema"
-	"reflect"
 	"strconv"
+	"fmt"
 )
 
 //constants
@@ -19,7 +19,7 @@ type Master struct {
 	Lastname  string   `json:"lastname" schema:"lastname"`
 	Email 	  string   `json:"email" gorm:"unique; not nul" schema:"email"`
 	Phone	  string   `json:"phone" gorm:"unique; not nul" schema:"phone"`
-	Password  string   `json:"-" schema:"password"`
+	Password  string   `json:"-" gorm:"not null" schema:"password"`
 }
 
 // Registration response
@@ -33,8 +33,9 @@ type StatusResponse struct {
 func RegistrationMaster(w http.ResponseWriter, r *http.Request) {
 	//parse request
 	var master Master
-	parseFields(&master, r)
+	master = parseFields(Master{}, r)
 
+	fmt.Println(master)
 	// validate
 	strIncompleteElems := MasterRegistrationValidate(master)
 
@@ -100,15 +101,61 @@ func RegistrationMaster(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+// Auth response
+type AuthReponse struct {
+	ID int
+	AccessToken string
+	ResponseToken string
+}
+
 // Auth master
 func AuthMaster(w http.ResponseWriter, r *http.Request) {
-	//parse request
+	// parse request
 	var master Master
-	parseFields(&master, r)
+	master = parseFields(Master{}, r)
+
+	// validate
+	strIncompleteElems := MasterAuthValidate(master)
+
+	if strIncompleteElems != "" {
+		res := StatusResponse{
+			Status: false,
+			Message: "Not all required fields is complete: " + strIncompleteElems,
+		}
+
+		json.NewEncoder(w).Encode(res)
+		return
+	}
+
+	// Try to auth Master
+	var smaster Master
+	Db.Where("phone = ?", master.Phone).First(smaster)
+
+	if smaster.Password == "" {
+		res := StatusResponse{
+			Status: false,
+			Message: "Phone is not found",
+		}
+
+		json.NewEncoder(w).Encode(res)
+		return
+	} else {
+		if !CheckPasswordHash(master.Password, smaster.Password) {
+			res := StatusResponse{
+				Status: false,
+				Message: "Password is incorrect",
+			}
+
+			json.NewEncoder(w).Encode(res)
+			return
+		}
+	}
+
+
 }
 
 // parse fields from request for master
-func parseFields(master *Master, r *http.Request) {
+func parseFields(master Master, r *http.Request) Master {
 	if r.Header.Get("Content-type") == "application/json" {
 		json.NewDecoder(r.Body).Decode(&master)
 	} else {
@@ -116,4 +163,6 @@ func parseFields(master *Master, r *http.Request) {
 		schemaDec := schema.NewDecoder()
 		schemaDec.Decode(&master, r.PostForm)
 	}
+
+	return master
 }
