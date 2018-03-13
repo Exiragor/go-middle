@@ -33,26 +33,10 @@ type StatusResponse struct {
 func RegistrationMaster(w http.ResponseWriter, r *http.Request) {
 	//parse request
 	var master Master
-	if r.Header.Get("Content-type") == "application/json" {
-		json.NewDecoder(r.Body).Decode(&master)
-	} else {
-		r.ParseForm()
-		schemaDec := schema.NewDecoder()
-		schemaDec.Decode(&master, r.PostForm)
-	}
-
-	// required fields for registration
-	requiredFields := []string{"Phone", "Password", "Email"}
+	parseFields(&master, r)
 
 	// validate
-	v := reflect.ValueOf(master)
-	strIncompleteElems := ""
-	for _, elem := range requiredFields {
-		value := v.FieldByName(elem).Interface()
-		if value == "" {
-			strIncompleteElems += elem + " is incorrect; "
-		}
-	}
+	strIncompleteElems := MasterRegistrationValidate(master)
 
 	if strIncompleteElems != "" {
 		res := StatusResponse{
@@ -65,13 +49,24 @@ func RegistrationMaster(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// search master with phone in our db
-	var smaster Master
-	Db.Where("phone = ?", master.Phone).First(&smaster)
+	var smasterPhone Master
+	var smasterEmail Master
+	Db.Where("phone = ?", master.Phone).First(&smasterPhone)
+	Db.Where("email = ?", master.Email).First(&smasterEmail)
 
-	if smaster.Phone != "" {
+	if smasterPhone.Phone != "" {
 		resp := StatusResponse{
 			Status: false,
 			Message: "This phone is already taken",
+		}
+
+		json.NewEncoder(w).Encode(resp)
+		return
+	}
+	if smasterEmail.Email != "" {
+		resp := StatusResponse{
+			Status: false,
+			Message: "This email is already taken",
 		}
 
 		json.NewEncoder(w).Encode(resp)
@@ -105,5 +100,20 @@ func RegistrationMaster(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+// Auth master
+func AuthMaster(w http.ResponseWriter, r *http.Request) {
+	//parse request
+	var master Master
+	parseFields(&master, r)
+}
 
-
+// parse fields from request for master
+func parseFields(master *Master, r *http.Request) {
+	if r.Header.Get("Content-type") == "application/json" {
+		json.NewDecoder(r.Body).Decode(&master)
+	} else {
+		r.ParseForm()
+		schemaDec := schema.NewDecoder()
+		schemaDec.Decode(&master, r.PostForm)
+	}
+}
