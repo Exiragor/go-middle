@@ -10,15 +10,14 @@ import (
 
 //constants
 
-
-// The master Type
+// The Master Type
 type Master struct {
 	ID        int      `json:"id" gorm:"PRIMARY_KEY"`
 	Active    bool     `json:"-"`
 	BitrixID  int      `json:"-"`
 	Firstname string   `json:"firstname" schema:"firstname"`
 	Lastname  string   `json:"lastname" schema:"lastname"`
-	Email 	  string   `json:"email" schema:"email"`
+	Email 	  string   `json:"email" gorm:"unique; not nul" schema:"email"`
 	Phone	  string   `json:"phone" gorm:"unique; not nul" schema:"phone"`
 	Password  string   `json:"-" schema:"password"`
 }
@@ -32,6 +31,7 @@ type StatusResponse struct {
 
 // Registration master
 func RegistrationMaster(w http.ResponseWriter, r *http.Request) {
+	//parse request
 	var master Master
 	if r.Header.Get("Content-type") == "application/json" {
 		json.NewDecoder(r.Body).Decode(&master)
@@ -42,8 +42,9 @@ func RegistrationMaster(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// required fields for registration
-	requiredFields := []string{"Phone", "Password"}
+	requiredFields := []string{"Phone", "Password", "Email"}
 
+	// validate
 	v := reflect.ValueOf(master)
 	strIncompleteElems := ""
 	for _, elem := range requiredFields {
@@ -63,12 +64,11 @@ func RegistrationMaster(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// search master with phone on our db
+	// search master with phone in our db
 	var smaster Master
 	Db.Where("phone = ?", master.Phone).First(&smaster)
 
 	if smaster.Phone != "" {
-
 		resp := StatusResponse{
 			Status: false,
 			Message: "This phone is already taken",
@@ -93,7 +93,6 @@ func RegistrationMaster(w http.ResponseWriter, r *http.Request) {
 	}
 
 	master.Password, _ = HashPassword(master.Password)
-
 	Db.Create(&master)
 
 	response := StatusResponse{
