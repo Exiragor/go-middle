@@ -29,7 +29,6 @@ type BitrixAddUserReq struct {
 	Name 		string 	`json:"NAME"`
 	LastName 	string 	`json:"LAST_NAME"`
 	Phone 		string 	`json:"PERSONAL_MOBILE"`
-	Active 		bool 	`json:"ACTIVE"`
 	Extranet 	string 	`json:"EXTRANET"`
 	GroupID 	[]int 	`json:"SONET_GROUP_ID"`
 }
@@ -71,7 +70,6 @@ func BitrixAddUser(master *Master) {
 		master.Firstname,
 		master.Lastname,
 		master.Phone,
-		true,
 		"Y",
 		[]int{11},
 	}
